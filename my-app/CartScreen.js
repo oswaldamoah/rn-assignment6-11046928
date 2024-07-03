@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Button, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CartScreen = () => {
@@ -23,10 +23,26 @@ const CartScreen = () => {
 
   const removeFromCart = async (product) => {
     try {
-      const updatedCart = cart.filter((item) => item.id !== product.id);
-      setCart(updatedCart);
-      await AsyncStorage.setItem('cart', JSON.stringify(updatedCart));
-      console.log('Removed product:', product);
+      const existingProductIndex = cart.findIndex((item) => item.id === product.id);
+      let updatedCart;
+
+      if (existingProductIndex > -1) {
+        const existingProduct = cart[existingProductIndex];
+
+        if (existingProduct.quantity > 1) {
+          // Decrease quantity by 1
+          updatedCart = cart.map(item =>
+            item.id === product.id ? { ...item, quantity: item.quantity - 1 } : item
+          );
+        } else {
+          // Remove product if quantity is 1
+          updatedCart = cart.filter(item => item.id !== product.id);
+        }
+
+        setCart(updatedCart);
+        await AsyncStorage.setItem('cart', JSON.stringify(updatedCart));
+        console.log('Removed product:', product);
+      }
     } catch (error) {
       console.log('Error removing product:', error);
     }
